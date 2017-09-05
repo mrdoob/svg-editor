@@ -24,11 +24,17 @@
 			#stage {
 				background: #fff;
 			}
+			#stage.wireframe * {
+				stroke: #000 !important;
+				stroke-width: 1px !important;
+				fill: transparent !important;
+			}
 		</style>
 	</head>
 	<body>
 		<span id="tools">
 			<input id="title" value="Untitled"></input>
+			<input id="wireframe" type="checkbox"></input>wireframe
 			<hr/>
 			<button id="createCircle">Circle</button>
 			<button id="createRectangle">Rectangle</button>
@@ -66,6 +72,12 @@
 			var selector = new Selector( stage );
 
 			//
+
+			wireframe.addEventListener( 'change', function () {
+
+				stage.classList.toggle( 'wireframe' );
+
+			} );
 
 			createCircle.addEventListener( 'click', function () {
 
