@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+	<title>SVG Editor</title>
+	<head>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				background: #eee;
+			}
+			button {
+				width: 100%;
+			}
+			input {
+				width: 100%;
+			}
+			#tools {
+				padding: 10px;
+				display: inline-block;
+				width: 100px;
+				vertical-align: top;
+			}
+			#stage {
+				background: #fff;
+			}
+			#selection {
+				position: absolute;
+				display: block;
+				outline: solid 1px #99f;
+				pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+		<span id="tools">
+			<input id="title" value="Untitled"></input>
+			<hr/>
+			<button id="createCircle">Circle</button>
+			<button id="createRectangle">Rectangle</button>
+			<button id="createText">Text</button>
+			<hr/>
+			<button id="load">Load</button>
+			<button id="save">Save</button>
+		</span>
+		<svg id="stage" width="600" height="400" viewBox="0 0 600 400"></svg>
+		<span id="selection"></span>
+		<script>
+
+			/*
+			TODO
+			- Web Components
+			- Properties/Attributes
+			- Support Ghostscript_Tiger
+			*/
+
+			const WIDTH = 600;
+			const HEIGHT = 400;
+
+			var namespace = 'http://www.w3.org/2000/svg';
+
+			function parseNumber( value ) {
+
+				return parseFloat( value.toFixed( 2 ) );
+
+			}
+
+			function randomColor() {
+
+				return '#'+Math.floor(Math.random()*16777215).toString(16);
+
+			}
+
+			function updateSelection( element ) {
+
+				if ( element.isSameNode( stage ) ) {
+
+					selection.style.display = 'none';
+					return;
+
+				}
+
+				var rect = element.getBoundingClientRect();
+
+				selection.style.left = rect.left + 'px';
+				selection.style.top = rect.top + 'px';
+				selection.style.width = rect.width + 'px';
+				selection.style.height = rect.height + 'px';
+
+				selection.style.display = 'block';
+
+			}
+
+			//
+
+			stage.addEventListener( 'mouseover', function ( event ) {
+
+				var target = event.target;
+				updateSelection( target );
+
+			} );
+
+			var selected = null;
+			var onMouseDownOffset = { x: 0, y: 0 };
+
+			stage.addEventListener( 'mousedown', function ( event ) {
+
+				var target = event.target;
+
+				if ( target.isSameNode( stage ) === false ) {
+
+					if ( target.tagName === 'circle' ) {
+
+						onMouseDownOffset.x = parseFloat( target.getAttribute( 'cx' ) ) - event.clientX;
+						onMouseDownOffset.y = parseFloat( target.getAttribute( 'cy' ) ) - event.clientY;
+
+					} else {
+
+						onMouseDownOffset.x = parseFloat( target.getAttribute( 'x' ) ) - event.clientX;
+						onMouseDownOffset.y = parseFloat( target.getAttribute( 'y' ) ) - event.clientY;
+
+					}
+
+					selected = target;
+
+				}
+
+			} );
+
+			stage.addEventListener( 'mouseup', function ( event ) {
+
+				selected = null;
+
+			} );
+
+			window.addEventListener( 'mousemove', function ( event ) {
+
+				if ( selected ) {
+
+					if ( selected.tagName === 'circle' ) {
+
+						selected.setAttribute( 'cx', event.clientX + onMouseDownOffset.x );
+						selected.setAttribute( 'cy', event.clientY + onMouseDownOffset.y );
+
+					} else {
+
+						selected.setAttribute( 'x', event.clientX + onMouseDownOffset.x );
+						selected.setAttribute( 'y', event.clientY + onMouseDownOffset.y );
+
+					}
+
+					updateSelection( selected );
+
+				}
+
+			} );
+
+			//
+
+			createCircle.addEventListener( 'click', function () {
+
+				var element = document.createElementNS( namespace, 'circle' );
+				element.setAttribute( 'cx', parseNumber( Math.random() * WIDTH ) );
+				element.setAttribute( 'cy', parseNumber( Math.random() * HEIGHT ) );
+				element.setAttribute( 'r', parseNumber( Math.random() * 100 ) );
+				element.style.stroke = 'black';
+				element.style.fill = randomColor();
+				stage.appendChild( element );
+
+			} );
+
+			createRectangle.addEventListener( 'click', function () {
+
+				var element = document.createElementNS( namespace, 'rect' );
+				element.setAttribute( 'x', parseNumber( Math.random() * WIDTH ) );
+				element.setAttribute( 'y', parseNumber( Math.random() * HEIGHT ) );
+				element.setAttribute( 'width', parseNumber( Math.random() * 100 ) );
+				element.setAttribute( 'height', parseNumber( Math.random() * 100 ) );
+				element.style.stroke = 'black';
+				element.style.fill = randomColor();
+				stage.appendChild( element );
+
+			} );
+
+			createText.addEventListener( 'click', function () {
+
+				var element = document.createElementNS( namespace, 'text' );
+				element.setAttribute( 'x', parseNumber( Math.random() * WIDTH ) );
+				element.setAttribute( 'y', parseNumber( Math.random() * HEIGHT ) );
+				element.setAttribute( 'font-size', '30px' );
+				element.style.stroke = 'black';
+				element.style.fill = randomColor();
+				element.textContent = 'Hello World';
+				stage.appendChild( element );
+
+			} );
+
+			// LOAD
+
+			var form = document.createElement( 'form' );
+			form.style.display = 'none';
+			document.body.appendChild( form );
+
+			var input = document.createElement( 'input' );
+			input.type = 'file';
+			input.addEventListener( 'change', function ( event ) {
+
+				var file = input.files[ 0 ];
+
+				title.value = file.name.split( '.' )[ 0 ];
+
+				var reader = new FileReader();
+				reader.addEventListener( 'load', function ( event ) {
+
+					var contents = event.target.result;
+					var svg = new DOMParser().parseFromString( contents, 'image/svg+xml' );
+					stage.innerHTML = svg.documentElement.innerHTML;
+
+				}, false );
+				reader.readAsText( file );
+
+				form.reset();
+
+			} );
+			form.appendChild( input );
+
+			load.addEventListener( 'click', function () {
+
+				input.click();
+
+			} );
+
+			// SAVE
+
+			var link = document.createElement( 'a' );
+			link.style.display = 'none';
+			document.body.appendChild( link );
+
+			save.addEventListener( 'click', function () {
+
+				// TODO Checkbox for auto-formating
+
+				var string = [
+					'<?xml version="1.0" encoding="UTF-8"?>',
+					'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">',
+					stage.innerHTML.replace( /\<\/([a-z]+)\></g, '</$1>\n<' ),
+					'</svg>'
+				].join( '\n' );
+
+				var blob = new Blob( [ string ], { type: 'text/plain' } );
+
+				link.href = URL.createObjectURL( blob );
+				link.download = title.value + '.svg';
+				link.click();
+
+			} );
+
+		</script>
+
+	</body>
+</html>
