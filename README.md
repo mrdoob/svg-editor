@@ -1,2 +1,2 @@
 # svg-editor
-SVG Editor
+https://mrdoob.github.io/svg-editor/
