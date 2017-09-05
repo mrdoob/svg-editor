@@ -27,7 +27,7 @@
 			#selection {
 				position: absolute;
 				display: block;
-				outline: solid 1px #99f;
+				outline: solid 2px #99f;
 				pointer-events: none;
 			}
 		</style>
@@ -45,12 +45,13 @@
 		</span>
 		<svg id="stage" width="600" height="400" viewBox="0 0 600 400"></svg>
 		<span id="selection"></span>
+		<script src="js/Editor.js"></script>
 		<script>
+
+			const NS = 'http://www.w3.org/2000/svg';
 
 			const WIDTH = 600;
 			const HEIGHT = 400;
-
-			var namespace = 'http://www.w3.org/2000/svg';
 
 			function parseNumber( value ) {
 
@@ -86,6 +87,8 @@
 
 			//
 
+			var editor = new Editor( stage );
+
 			stage.addEventListener( 'mouseover', function ( event ) {
 
 				var target = event.target;
@@ -94,7 +97,7 @@
 			} );
 
 			var selected = null;
-			var onMouseDownOffset = { x: 0, y: 0 };
+			var offset = { x: 0, y: 0 };
 
 			stage.addEventListener( 'mousedown', function ( event ) {
 
@@ -104,13 +107,13 @@
 
 					if ( target.tagName === 'circle' ) {
 
-						onMouseDownOffset.x = parseFloat( target.getAttribute( 'cx' ) ) - event.clientX;
-						onMouseDownOffset.y = parseFloat( target.getAttribute( 'cy' ) ) - event.clientY;
+						offset.x = parseFloat( target.getAttribute( 'cx' ) ) - event.clientX;
+						offset.y = parseFloat( target.getAttribute( 'cy' ) ) - event.clientY;
 
 					} else {
 
-						onMouseDownOffset.x = parseFloat( target.getAttribute( 'x' ) ) - event.clientX;
-						onMouseDownOffset.y = parseFloat( target.getAttribute( 'y' ) ) - event.clientY;
+						offset.x = parseFloat( target.getAttribute( 'x' ) ) - event.clientX;
+						offset.y = parseFloat( target.getAttribute( 'y' ) ) - event.clientY;
 
 					}
 
@@ -132,13 +135,13 @@
 
 					if ( selected.tagName === 'circle' ) {
 
-						selected.setAttribute( 'cx', event.clientX + onMouseDownOffset.x );
-						selected.setAttribute( 'cy', event.clientY + onMouseDownOffset.y );
+						selected.setAttribute( 'cx', event.clientX + offset.x );
+						selected.setAttribute( 'cy', event.clientY + offset.y );
 
 					} else {
 
-						selected.setAttribute( 'x', event.clientX + onMouseDownOffset.x );
-						selected.setAttribute( 'y', event.clientY + onMouseDownOffset.y );
+						selected.setAttribute( 'x', event.clientX + offset.x );
+						selected.setAttribute( 'y', event.clientY + offset.y );
 
 					}
 
@@ -152,39 +155,42 @@
 
 			createCircle.addEventListener( 'click', function () {
 
-				var element = document.createElementNS( namespace, 'circle' );
+				var element = document.createElementNS( NS, 'circle' );
 				element.setAttribute( 'cx', parseNumber( Math.random() * WIDTH ) );
 				element.setAttribute( 'cy', parseNumber( Math.random() * HEIGHT ) );
 				element.setAttribute( 'r', parseNumber( Math.random() * 100 ) );
 				element.style.stroke = 'black';
 				element.style.fill = randomColor();
-				stage.appendChild( element );
+
+				editor.addElement( element );
 
 			} );
 
 			createRectangle.addEventListener( 'click', function () {
 
-				var element = document.createElementNS( namespace, 'rect' );
+				var element = document.createElementNS( NS, 'rect' );
 				element.setAttribute( 'x', parseNumber( Math.random() * WIDTH ) );
 				element.setAttribute( 'y', parseNumber( Math.random() * HEIGHT ) );
 				element.setAttribute( 'width', parseNumber( Math.random() * 100 ) );
 				element.setAttribute( 'height', parseNumber( Math.random() * 100 ) );
 				element.style.stroke = 'black';
 				element.style.fill = randomColor();
-				stage.appendChild( element );
+
+				editor.addElement( element );
 
 			} );
 
 			createText.addEventListener( 'click', function () {
 
-				var element = document.createElementNS( namespace, 'text' );
+				var element = document.createElementNS( NS, 'text' );
 				element.setAttribute( 'x', parseNumber( Math.random() * WIDTH ) );
 				element.setAttribute( 'y', parseNumber( Math.random() * HEIGHT ) );
 				element.setAttribute( 'font-size', '30px' );
 				element.style.stroke = 'black';
 				element.style.fill = randomColor();
 				element.textContent = 'Hello World';
-				stage.appendChild( element );
+
+				editor.addElement( element );
 
 			} );
 
@@ -206,8 +212,7 @@
 				reader.addEventListener( 'load', function ( event ) {
 
 					var contents = event.target.result;
-					var svg = new DOMParser().parseFromString( contents, 'image/svg+xml' );
-					stage.innerHTML = svg.documentElement.innerHTML;
+					editor.setSVG( new DOMParser().parseFromString( contents, 'image/svg+xml' ) );
 
 				}, false );
 				reader.readAsText( file );
@@ -231,16 +236,7 @@
 
 			save.addEventListener( 'click', function () {
 
-				// TODO Checkbox for auto-formating
-
-				var string = [
-					'<?xml version="1.0" encoding="UTF-8"?>',
-					'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">',
-					stage.innerHTML.replace( /\<\/([a-z]+)\></g, '</$1>\n<' ),
-					'</svg>'
-				].join( '\n' );
-
-				var blob = new Blob( [ string ], { type: 'text/plain' } );
+				var blob = new Blob( [ editor.toString() ], { type: 'text/plain' } );
 
 				link.href = URL.createObjectURL( blob );
 				link.download = title.value + '.svg';
