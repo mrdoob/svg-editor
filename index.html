@@ -42,14 +42,26 @@
 				line-height: 24px;
 				vertical-align: top;
 			}
-			#stage {
-				background: #fff;
+			#content {
+				display: inline-block;
+				width: 600px;
 			}
-			#stage.wireframe * {
-				stroke: #000 !important;
-				stroke-width: 1px !important;
-				fill: transparent !important;
-			}
+				#stage {
+					background: #fff;
+				}
+				#stage.wireframe * {
+					stroke: #000 !important;
+					stroke-width: 1px !important;
+					fill: transparent !important;
+				}
+				#textarea {
+					padding: 10px;
+					color: #888;
+					background-color: #f8f8f8;
+					border: 0px;
+					width: 600px;
+					height: 200px;
+				}
 		</style>
 	</head>
 	<body>
@@ -65,10 +77,14 @@
 			<button id="save">Save</button>
 			<button id="clear">Clear</button>
 		</span>
-		<svg id="stage" width="600" height="400" viewBox="0 0 600 400"></svg>
+		<span id="content">
+			<svg id="stage" width="600" height="400" viewBox="0 0 600 400"></svg>
+			<textarea id="textarea" spellcheck="false"></textarea>
+		</span>
 
 		<script src="js/Editor.js"></script>
 		<script src="js/Selector.js"></script>
+		<script src="js/Source.js"></script>
 		<script>
 
 			const NS = 'http://www.w3.org/2000/svg';
@@ -91,6 +107,8 @@
 			//
 
 			var editor = new Editor( stage );
+			editor.setSource( new Source( textarea ) );
+
 			var selector = new Selector( stage );
 
 			//

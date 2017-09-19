@@ -7,24 +7,34 @@ class Editor {
 	constructor( svg ) {
 
 		this.svg = svg;
+		this.source = null;
 
 	}
 
 	addElement( element ) {
 
 		this.svg.appendChild( element );
+		this.source.setText( this.toString() );
+
+	}
+
+	setSource( source ) {
+
+		this.source = source;
 
 	}
 
 	setSVG( svg ) {
 
 		this.svg.innerHTML = svg.documentElement.innerHTML;
+		this.source.setText( this.toString() );
 
 	}
 
 	clear() {
 
 		this.svg.textContent = '';
+		this.source.setText( this.toString() );
 
 	}
 
