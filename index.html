@@ -63,6 +63,7 @@
 			<hr/>
 			<button id="load">Load</button>
 			<button id="save">Save</button>
+			<button id="clear">Clear</button>
 		</span>
 		<svg id="stage" width="600" height="400" viewBox="0 0 600 400"></svg>
 
@@ -188,6 +189,14 @@
 				link.href = URL.createObjectURL( blob );
 				link.download = title.value + '.svg';
 				link.click();
+
+			} );
+
+			// CLEAR
+
+			clear.addEventListener( 'click', function () {
+
+				editor.clear();
 
 			} );
 

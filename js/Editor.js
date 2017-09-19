@@ -22,6 +22,12 @@ class Editor {
 
 	}
 
+	clear() {
+
+		this.svg.textContent = '';
+
+	}
+
 	toString() {
 
 		// TODO Checkbox for auto-formating
